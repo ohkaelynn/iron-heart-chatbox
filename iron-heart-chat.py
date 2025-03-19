@@ -2,8 +2,8 @@ import os
 import time
 import psutil
 import json
-import roslibpy
 import random
+from pythonosc.udp_client import SimpleUDPClient
 
 # CONFIGURATION FILE PATH
 CONFIG_FILE_PATH = "config.json"
@@ -11,7 +11,7 @@ CONFIG_FILE_PATH = "config.json"
 # OSC Connection
 VRCHAT_OSC_IP = "127.0.0.1"
 VRCHAT_OSC_PORT = 9000
-client = roslibpy.Ros(VRCHAT_OSC_IP, VRCHAT_OSC_PORT)
+client = SimpleUDPClient(VRCHAT_OSC_IP, VRCHAT_OSC_PORT)
 
 # Load Configurations
 def load_config():
@@ -111,20 +111,13 @@ def send_to_vrchat(message):
     """Send formatted heart rate message to VRChat OSC Chatbox."""
     global last_sent_message, last_sent_time
 
-    if not client.is_connected:
-        client.run()
-
-    osc_message = roslibpy.Message({
-        'address': "/chatbox/input",
-        'args': [message, True]  # True to send instantly
-    })
-    
-    publisher = roslibpy.Topic(client, '/chatbox/input', 'std_msgs/String')
-    publisher.publish(osc_message)
-    print(f"Sent to VRChat: {message}")
-
-    last_sent_message = message
-    last_sent_time = time.time()
+    try:
+        client.send_message("/chatbox/input", [message, True])  # True keeps the chatbox open
+        print(f"Sent to VRChat: {message}")
+        last_sent_message = message
+        last_sent_time = time.time()
+    except Exception as e:
+        print(f"Failed to send OSC message: {e}")
 
 def main():
     """Main loop to check heart rate and send to VRChat."""
@@ -148,7 +141,7 @@ def main():
         
         else:
             print("Iron-Heart.exe not running. Waiting...")
-        
+
         time.sleep(config["check_interval"])
 
 if __name__ == "__main__":
