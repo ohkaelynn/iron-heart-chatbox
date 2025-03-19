@@ -11,5 +11,6 @@
     "low_bpm_threshold": 60,
     "high_bpm_message": "🔥 High BPM!",
     "low_bpm_message": "💤 Low BPM...",
-    "normal_bpm_message": "😊 Normal"
+    "normal_bpm_message": "😊 Normal",
+    "custom_message_format": "{heart_icon} {bpm} BPM {trend_symbol} | {status}"
 }
