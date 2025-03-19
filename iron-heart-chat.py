@@ -3,7 +3,10 @@ import time
 import psutil
 import json
 import random
+import threading
 from pythonosc.udp_client import SimpleUDPClient
+from PIL import Image, ImageDraw
+import pystray
 
 # CONFIGURATION FILE PATH
 CONFIG_FILE_PATH = "config.json"
@@ -38,7 +41,7 @@ def load_config():
             json.dump(default_config, config_file, indent=4)
         return default_config
     else:
-        with open(CONFIG_FILE_PATH, "r") as config_file:
+        with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as config_file:
             return json.load(config_file)
 
 config = load_config()
@@ -47,6 +50,7 @@ config = load_config()
 hr_history = []
 last_sent_message = ""
 last_sent_time = time.time()
+paused = False
 
 def is_iron_heart_running():
     """Check if iron-heart.exe is running."""
@@ -100,12 +104,16 @@ def format_message(bpm):
     trend_symbol = detect_trend()
     status_message = get_status_message(bpm)
     
+    # If contextual messages are disabled, remove status and extra divider
+    if not config["enable_contextual"]:
+        return f"{heart_icon} {bpm} BPM {trend_symbol}".strip()
+    
     return config["custom_message_format"].format(
         bpm=bpm,
         heart_icon=heart_icon,
         trend_symbol=trend_symbol,
         status=status_message
-    )
+    ).strip()
 
 def send_to_vrchat(message):
     """Send formatted heart rate message to VRChat OSC Chatbox."""
@@ -121,28 +129,60 @@ def send_to_vrchat(message):
 
 def main():
     """Main loop to check heart rate and send to VRChat."""
+    global paused
     print("Starting Heart Rate to VRChat OSC Script...")
-    
-    while True:
-        if is_iron_heart_running():
-            bpm = read_heart_rate()
-            if bpm:
-                hr_history.append(bpm)
-                if len(hr_history) > 10:
-                    hr_history.pop(0)
-                
-                message = format_message(bpm)
-                
-                if message != last_sent_message:
-                    send_to_vrchat(message)
-                
-                if config["keep_chatbox_open"] and (time.time() - last_sent_time) > config["chatbox_refresh_time"]:
-                    send_to_vrchat(last_sent_message)
-        
-        else:
-            print("Iron-Heart.exe not running. Waiting...")
 
+    while True:
+        if not paused:
+            if is_iron_heart_running():
+                bpm = read_heart_rate()
+                if bpm:
+                    hr_history.append(bpm)
+                    if len(hr_history) > 10:
+                        hr_history.pop(0)
+                    
+                    message = format_message(bpm)
+                    
+                    if message != last_sent_message:
+                        send_to_vrchat(message)
+                    
+                    if config["keep_chatbox_open"] and (time.time() - last_sent_time) > config["chatbox_refresh_time"]:
+                        send_to_vrchat(last_sent_message)
+            else:
+                print("Iron-Heart.exe not running. Waiting...")
+        
         time.sleep(config["check_interval"])
 
-if __name__ == "__main__":
-    main()
+# --- SYSTEM TRAY INTEGRATION ---
+def create_icon():
+    """Create a simple icon for the system tray."""
+    icon_size = (64, 64)
+    image = Image.new("RGB", icon_size, (255, 0, 255))
+    draw = ImageDraw.Draw(image)
+    draw.ellipse((10, 10, 54, 54), fill=(255, 0, 255))
+    return image
+
+def toggle_pause(icon, item):
+    """Pause/unpause the script when clicked."""
+    global paused
+    paused = not paused
+    print(f"Script {'paused' if paused else 'resumed'}.")
+
+def exit_script(icon, item):
+    """Exit the script gracefully."""
+    icon.stop()
+    os._exit(0)
+
+def tray_app():
+    """Run the system tray application."""
+    icon = pystray.Icon("heart_monitor", create_icon(), menu=pystray.Menu(
+        pystray.MenuItem("Pause/Resume", toggle_pause),
+        pystray.MenuItem("Exit", exit_script)
+    ))
+    icon.run()
+
+# Start the main script in a separate thread
+threading.Thread(target=main, daemon=True).start()
+
+# Start the system tray
+tray_app()
