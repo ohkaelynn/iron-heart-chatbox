@@ -16,7 +16,7 @@ A Python script that **reads heart rate data from Iron-Heart** and **displays it
 
 ### 1️⃣ Install Dependencies
 ```sh
-pip install psutil roslibpy
+pip install python-osc
 ```
 
 ### 2️⃣ Run the Script  
@@ -62,7 +62,7 @@ _Edit this file to customize messages._
 ## 💻 Technologies Used
 - **Python 3** – Core scripting language.  
 - **psutil** – Detects if **Iron-Heart.exe** is running.  
-- **roslibpy** – Sends messages to **VRChat’s chatbox**.  
+- **python-osc** – Sends messages to VRChat’s OSC chatbox.  
 
 ---
 
