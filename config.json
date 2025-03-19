@@ -1,0 +1,15 @@
+{
+    "text_file_path": "C:\\path\\to\\heart_rate.txt",
+    "check_interval": 5,
+    "keep_chatbox_open": true,
+    "chatbox_refresh_time": 10,
+    "enable_trend": true,
+    "enable_contextual": true,
+    "heart_icons": ["❤️", "💖", "💗", "💙", "💚", "💛", "💜"],
+    "trend_symbols": {"up": "🔺", "down": "🔻", "steady": "➖"},
+    "high_bpm_threshold": 100,
+    "low_bpm_threshold": 60,
+    "high_bpm_message": "🔥 High BPM!",
+    "low_bpm_message": "💤 Low BPM...",
+    "normal_bpm_message": "😊 Normal"
+}
