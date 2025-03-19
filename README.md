@@ -9,7 +9,6 @@ A Python script that **reads heart rate data from Iron-Heart** and **displays it
 ✅ **Proxy between [nullstalgia/iron-heart](https://github.com/nullstalgia/iron-heart/) and VRChat OSC Chatbox**.  
 ✅ **Customizable message format**.  
 ✅ **Trends (🔺/🔻) & contextual messages**.  
-✅ **Runs automatically in the background**.  
 
 ---
 
